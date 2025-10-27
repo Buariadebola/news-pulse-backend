@@ -4,6 +4,7 @@ const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const fs = require('fs');
 require('dotenv').config();
+import axios from 'axios';
 
 const app = express();
 app.use(express.json());
@@ -11,6 +12,26 @@ app.use(cors({
   origin: ['https://newspulse-by-renova.vercel.app'],
   credentials: true
 }));
+
+const GNEWS_API_KEY = '01b76e73e54e1c3917c7e7d7b915cc4f';
+
+app.get('/api/news', async (req, res) => {
+  const { country = 'us', topic = 'general' } = req.query;
+  try {
+    const response = await axios.get('https://gnews.io/api/v4/top-headlines', {
+      params: {
+        country,
+        topic,
+        lang: 'en',
+        token: GNEWS_API_KEY
+      }
+    });
+    res.json(response.data);
+  } catch (err) {
+    console.error('Error fetching from GNews:', err.message);
+    res.status(500).json({ error: 'Failed to fetch news' });
+  }
+});
 
 const USERS_FILE = './users.json';
 const SECRET_KEY = process.env.SECRET_KEY || 'mysecretkey';
